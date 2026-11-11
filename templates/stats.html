@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app">
+    <header class="header">
+        <p class="header__subtitle">A Personal Archive</p>
+        <h1 class="header__title">Reading Stats</h1>
+        <span class="header__flourish"></span>
+        <a href="/" class="header__add-btn">Back to Shelf</a>
+    </header>
+    <button class="dark-toggle" id="dark-toggle" title="Toggle dark mode">&#9790;</button>
+
+    <!-- Year Filter -->
+    <div class="year-filter" id="year-filter">
+        <select class="year-filter__select" id="year-select">
+            <option value="">All Time</option>
+        </select>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="stats-cards" id="stats-cards">
+        <div class="stat-card">
+            <span class="stat-card__value" id="stat-total">0</span>
+            <span class="stat-card__label">Books</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-card__value" id="stat-finished">0</span>
+            <span class="stat-card__label">Finished</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-card__value" id="stat-pages">0</span>
+            <span class="stat-card__label">Pages Read</span>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="stats-grid">
+        <div class="chart-box">
+            <h3 class="chart-box__title">Books Per Month</h3>
+            <canvas id="chart-monthly" height="250"></canvas>
+            <p class="chart-box__empty" id="monthly-empty" style="display:none;">Finish some books to see your reading pace.</p>
+        </div>
+        <div class="chart-box">
+            <h3 class="chart-box__title">Genre Breakdown</h3>
+            <canvas id="chart-genre" height="250"></canvas>
+            <p class="chart-box__empty" id="genre-empty" style="display:none;">Add books to see your genre mix.</p>
+        </div>
+    </div>
+
+    <!-- Library Wrapped -->
+    <div class="wrapped" id="wrapped" style="display:none;">
+        <h2 class="wrapped__title">Library Wrapped</h2>
+        <span class="header__flourish"></span>
+        <div class="wrapped-cards">
+            <div class="wrapped-card">
+                <span class="wrapped-card__label">Top Genre</span>
+                <span class="wrapped-card__value" id="wrapped-genre">--</span>
+            </div>
+            <div class="wrapped-card">
+                <span class="wrapped-card__label">Longest Book</span>
+                <span class="wrapped-card__value" id="wrapped-longest">--</span>
+            </div>
+            <div class="wrapped-card">
+                <span class="wrapped-card__label">Most Quoted</span>
+                <span class="wrapped-card__value" id="wrapped-quoted">--</span>
+            </div>
+            <div class="wrapped-card">
+                <span class="wrapped-card__label">Total Pages</span>
+                <span class="wrapped-card__value" id="wrapped-pages">--</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/stats.js') }}"></script>
+{% endblock %}

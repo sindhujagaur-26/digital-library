@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app">
+    <!-- Header -->
+    <header class="header">
+        <p class="header__subtitle">A Personal Archive</p>
+        <h1 class="header__title">Welcome to my library</h1>
+        <span class="header__flourish"></span>
+        <p class="header__count"><span id="volume-count">{{ books|length }}</span> Volumes</p>
+        <div class="header__actions">
+            <button class="header__add-btn" id="add-book-btn">Add a Book</button>
+            <a href="/stats" class="header__stats-link">Reading Stats</a>
+        </div>
+    </header>
+    <button class="dark-toggle" id="dark-toggle" title="Toggle dark mode">&#9790;</button>
+    <button class="panel-toggle" id="panel-toggle" title="Reading lists">&#9776;</button>
+
+    <!-- Side Panel -->
+    <aside class="side-panel" id="side-panel">
+        <button class="side-panel__close" id="panel-close">&times;</button>
+        <h2 class="side-panel__title">My Reading Lists</h2>
+
+        <div class="side-panel__section" id="panel-reading">
+            <h3 class="side-panel__heading">Currently Reading</h3>
+        </div>
+
+        <div class="side-panel__section" id="panel-tbr">
+            <h3 class="side-panel__heading">To Be Read</h3>
+        </div>
+
+        <div class="side-panel__section" id="panel-finished">
+            <h3 class="side-panel__heading">Completed</h3>
+        </div>
+
+        <div class="side-panel__section" id="panel-abandoned">
+            <h3 class="side-panel__heading">Didn't Finish</h3>
+        </div>
+
+        <button class="side-panel__clear" id="panel-clear-filter" style="display:none;">Show All Books</button>
+    </aside>
+    <div class="side-panel__overlay" id="panel-overlay"></div>
+
+    <!-- Search -->
+    <div class="search-section">
+        <input type="text" class="search-input" id="search-input" placeholder="What are you looking for?">
+    </div>
+
+    <!-- Genre Filters -->
+    <div class="filters" id="genre-filters">
+        <button class="filter-chip active" data-genre="all">All</button>
+        <button class="filter-chip" data-genre="nonfiction">Nonfiction</button>
+        <button class="filter-chip" data-genre="fiction">Fiction</button>
+        <button class="filter-chip" data-genre="sci-fi">Sci-Fi</button>
+        <button class="filter-chip" data-genre="mystery">Mystery &amp; Thriller</button>
+        <button class="filter-chip" data-genre="fantasy">Fantasy</button>
+        <button class="filter-chip" data-genre="romance">Romance</button>
+        <button class="filter-chip" data-genre="self-help">Self-Help</button>
+    </div>
+
+    <!-- Active filter chip (shown when filtering by reading status) -->
+    <div id="filter-banner-wrap" style="text-align:center;">
+        <div class="filter-banner" id="filter-banner">
+            <span class="filter-banner__text"><strong id="filter-banner-label"></strong></span>
+            <button class="filter-banner__clear" id="filter-banner-clear">&times;</button>
+        </div>
+    </div>
+
+    <!-- Bookshelf -->
+    <div class="shelf-container" id="shelf-container"></div>
+
+    <p class="empty-state" id="empty-state" style="display:none;">
+        Your library is empty. Click <strong>Add a Book</strong> to start building your shelf.
+    </p>
+</div>
+
+<!-- Add Book Modal -->
+<div class="modal-overlay" id="add-modal">
+    <div class="modal add-modal">
+        <button class="modal__close" id="add-modal-close">&times;</button>
+
+        <!-- Step 1: Search -->
+        <div id="add-step-search">
+            <h2 class="modal__title">Add a Book</h2>
+            <input type="text" class="modal__search" id="api-search-input" placeholder="Search by title or author..." autofocus>
+            <div class="search-results" id="search-results"></div>
+            <div class="search-loading" id="search-loading" style="display:none;">Searching...</div>
+            <p class="manual-link" id="manual-link" style="display:none;">
+                Can't find it? <button class="manual-link__btn" id="manual-entry-btn">Add manually</button>
+            </p>
+        </div>
+
+        <!-- Step 3: Manual entry -->
+        <div id="add-step-manual" style="display:none;">
+            <button class="add-back-btn" id="manual-back-btn">&larr; Back</button>
+            <h2 class="modal__title">Add Manually</h2>
+            <div class="detail-section">
+                <label class="detail__label">Title *</label>
+                <input type="text" class="detail__input" id="manual-title" placeholder="Book title">
+            </div>
+            <div class="detail-section">
+                <label class="detail__label">Author *</label>
+                <input type="text" class="detail__input" id="manual-author" placeholder="Author name">
+            </div>
+            <div class="detail-row">
+                <div class="detail-section detail-section--half">
+                    <label class="detail__label">Pages</label>
+                    <input type="number" class="detail__input" id="manual-pages" placeholder="e.g. 300">
+                </div>
+                <div class="detail-section detail-section--half">
+                    <label class="detail__label">Year</label>
+                    <input type="number" class="detail__input" id="manual-year" placeholder="e.g. 2023">
+                </div>
+            </div>
+            <div class="detail-section">
+                <label class="detail__label">Genre</label>
+                <input type="text" class="detail__input" id="manual-genre" placeholder="e.g. Fiction, Romance...">
+            </div>
+            <div class="detail-section">
+                <label class="detail__label">Status</label>
+                <select class="detail__select" id="manual-status">
+                    <option value="want_to_read">Want to Read</option>
+                    <option value="reading">Currently Reading</option>
+                    <option value="finished">Finished</option>
+                </select>
+            </div>
+            <button class="add-confirm-btn" id="manual-confirm-btn">Add to Shelf</button>
+        </div>
+
+        <!-- Step 2: Details before adding -->
+        <div id="add-step-details" style="display:none;">
+            <button class="add-back-btn" id="add-back-btn">&larr; Back</button>
+            <div class="add-preview">
+                <img class="add-preview__cover" id="add-preview-cover" src="" alt="">
+                <div class="add-preview__info">
+                    <h2 class="add-preview__title" id="add-preview-title"></h2>
+                    <p class="add-preview__author" id="add-preview-author"></p>
+                    <p class="add-preview__meta" id="add-preview-meta"></p>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <label class="detail__label">Have you read it?</label>
+                <select class="detail__select" id="add-status">
+                    <option value="want_to_read">Want to Read</option>
+                    <option value="reading">Currently Reading</option>
+                    <option value="finished">Finished</option>
+                </select>
+            </div>
+
+            <div class="detail-section">
+                <label class="detail__label">Rating</label>
+                <div class="star-rating" id="add-star-rating"></div>
+            </div>
+
+            <div class="detail-section">
+                <label class="detail__label">Notes</label>
+                <textarea class="detail__textarea" id="add-notes" placeholder="Any thoughts so far..."></textarea>
+            </div>
+
+            <button class="add-confirm-btn" id="add-confirm-btn">Add to Shelf</button>
+        </div>
+    </div>
+</div>
+
+<!-- Book Detail Modal -->
+<div class="modal-overlay" id="detail-modal">
+    <div class="modal detail-modal">
+        <button class="modal__close" id="detail-modal-close">&times;</button>
+        <div class="detail-top">
+            <img class="detail__cover" id="detail-cover" src="" alt="">
+            <div class="detail__info">
+                <h2 class="detail__title" id="detail-title"></h2>
+                <p class="detail__author" id="detail-author"></p>
+                <p class="detail__meta" id="detail-meta"></p>
+                <p class="detail__genre" id="detail-genre"></p>
+                <p class="detail__description" id="detail-description"></p>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <label class="detail__label">Rating</label>
+            <div class="star-rating" id="star-rating"></div>
+        </div>
+
+        <div class="detail-section">
+            <label class="detail__label">Genre</label>
+            <input type="text" class="detail__input" id="detail-genre-edit" placeholder="e.g. Romance, Sci-Fi, Nonfiction...">
+        </div>
+
+        <div class="detail-section">
+            <label class="detail__label">Status</label>
+            <select class="detail__select" id="detail-status">
+                <option value="want_to_read">Want to Read</option>
+                <option value="reading">Currently Reading</option>
+                <option value="finished">Finished</option>
+                <option value="abandoned">Didn't Finish</option>
+            </select>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-section detail-section--half">
+                <label class="detail__label">Started</label>
+                <input type="date" class="detail__input" id="detail-date-started">
+            </div>
+            <div class="detail-section detail-section--half">
+                <label class="detail__label">Finished</label>
+                <input type="date" class="detail__input" id="detail-date-finished">
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <label class="detail__label">Notes</label>
+            <textarea class="detail__textarea" id="detail-notes" placeholder="Your thoughts on this book..."></textarea>
+        </div>
+
+        <div class="detail-section">
+            <label class="detail__label">Favorite Lines</label>
+            <div id="quotes-list" class="quotes-list"></div>
+            <div class="quote-add">
+                <input type="text" class="quote-add__input" id="quote-input" placeholder="Add a favorite line...">
+                <input type="number" class="quote-add__page" id="quote-page" placeholder="p.">
+                <button class="quote-add__btn" id="quote-add-btn">+</button>
+            </div>
+        </div>
+
+        <div class="detail-actions">
+            <button class="btn-danger" id="delete-book-btn">Delete Book</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+    const BOOKS_DATA = {{ books | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/helpers.js') }}"></script>
+<script src="{{ url_for('static', filename='js/shelf.js') }}"></script>
+<script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/drag.js') }}"></script>
+<script src="{{ url_for('static', filename='js/panel.js') }}"></script>
+<script src="{{ url_for('static', filename='js/search.js') }}"></script>
+{% endblock %}

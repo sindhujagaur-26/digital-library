@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% block content %}{% endblock %}
+    {% block scripts %}{% endblock %}
+    <script>
+    (function() {
+        if (localStorage.getItem('dark') === '1') document.body.classList.add('dark');
+        document.addEventListener('DOMContentLoaded', function() {
+            var btn = document.getElementById('dark-toggle');
+            if (!btn) return;
+            btn.innerHTML = document.body.classList.contains('dark') ? '&#9788;' : '&#9790;';
+            btn.addEventListener('click', function() {
+                document.body.classList.toggle('dark');
+                var on = document.body.classList.contains('dark');
+                localStorage.setItem('dark', on ? '1' : '0');
+                btn.innerHTML = on ? '&#9788;' : '&#9790;';
+            });
+        });
+    })();
+    </script>
+</body>
+</html>
